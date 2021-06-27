@@ -757,7 +757,7 @@ void BLEconnect() {
           BLEclient.publishData();
           break;
         }
-        case MEATER : {
+        case MEATER: {
           MEATER_connect BLEclient(addr);
           BLEclient.publishData();
           break;
