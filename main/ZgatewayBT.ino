@@ -757,6 +757,11 @@ void BLEconnect() {
           BLEclient.publishData();
           break;
         }
+        case MEATER : {
+          MEATER_connect BLEclient(addr);
+          BLEclient.publishData();
+          break;
+        }
         default:
           break;
       }
@@ -1324,6 +1329,14 @@ JsonObject& process_bledata(JsonObject& BLEdata) {
         BLEdata.set("model", "DT24");
         if (device->sensorModel == -1)
           createOrUpdateDevice(mac, device_flags_connect, DT24);
+        return BLEdata;
+      }
+      Log.trace(F("Is it a MEATER?" CR));
+      if (strcmp(name, "MEATER") == 0) {
+        Log.trace(F("MEATER data reading data reading" CR));
+        BLEdata.set("model", "MEATER");
+        if (device->sensorModel == -1)
+          createOrUpdateDevice(mac, device_flags_connect, MEATER);
         return BLEdata;
       }
     }
