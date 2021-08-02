@@ -67,13 +67,13 @@ bool bleConnect = AttemptBLECOnnect;
 #  define ActiveBLEScan true // Set active scanning, this will get more data from the advertiser.
 #endif
 #ifndef ScanBeforeConnect
-#  define ScanBeforeConnect 10 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
+#  define ScanBeforeConnect 80 //define number of scans before connecting to BLE devices (ESP32 only, minimum 1)
 #endif
 #ifndef BLEScanDuplicateCacheSize
 #  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
-#  define TimeBtwRead 55555 //define default time between 2 scans
+#  define TimeBtwRead 7000 //define default time between 2 scans
 #endif
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)
