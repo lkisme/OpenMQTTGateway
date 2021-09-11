@@ -29,7 +29,7 @@
 #define user_config_h
 /*-------------------VERSION----------------------*/
 #ifndef OMG_VERSION
-#  define OMG_VERSION "0.9.8-adc"
+#  define OMG_VERSION "0.9.8-ibox"
 #endif
 
 /*-------------CONFIGURE WIFIMANAGER-------------(only ESP8266 & SONOFF RFBridge)*/
@@ -294,7 +294,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZboardM5STICKCP "M5StickCP"
 //#define ZboardM5STACK  "ZboardM5STACK"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
-//#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
 //#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32

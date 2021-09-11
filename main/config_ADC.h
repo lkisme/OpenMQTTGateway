@@ -37,7 +37,7 @@ extern void ADCtoMQTT();
 #endif
 
 #ifndef ThresholdReadingADC
-#  define ThresholdReadingADC 15 // following the comparison between the previous value and the current one +- the threshold the value will be published or not
+#  define ThresholdReadingADC 50 // following the comparison between the previous value and the current one +- the threshold the value will be published or not
 #endif
 
 /*-------------------PIN DEFINITIONS----------------------*/
