@@ -34,18 +34,11 @@
 void MQTTtoONOFF(char* topicOri, JsonObject& ONOFFdata) {
   if (cmpToMainTopic(topicOri, subjectMQTTtoONOFF)) {
     Log.trace(F("MQTTtoONOFF json data analysis" CR));
-    int boolSWITCHTYPE = ONOFFdata["cmd"] | 99;
-    int gpio = ONOFFdata["gpio"] | ACTUATOR_ONOFF_GPIO;
-    if (boolSWITCHTYPE != 99) {
-      Log.notice(F("MQTTtoONOFF boolSWITCHTYPE ok: %d" CR), boolSWITCHTYPE);
-      Log.notice(F("GPIO number: %d" CR), gpio);
-      pinMode(gpio, OUTPUT);
-      digitalWrite(gpio, boolSWITCHTYPE);
-      // we acknowledge the sending by publishing the value to an acknowledgement topic
-      pub(subjectGTWONOFFtoMQTT, ONOFFdata);
-    } else {
-      Log.error(F("MQTTtoONOFF failed json read" CR));
-    }
+    int track = ONOFFdata["track"] | 0;
+    if (track == 0) return;
+
+    Log.notice(F("Sound track number: %d" CR), track);
+    speak((char)track);
   }
 }
 #  endif
@@ -55,23 +48,12 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
     char* endptr = NULL;
-    long gpio = strtol(datacallback, &endptr, 10);
+    long track = strtol(datacallback, &endptr, 10);
     if (datacallback == endptr)
-      gpio = ACTUATOR_ONOFF_GPIO;
+      return;
 
-    Log.notice(F("GPIO number: %d" CR), gpio);
-    pinMode(gpio, OUTPUT);
-
-    bool ON = false;
-    if (strstr(topicOri, ONKey) != NULL)
-      ON = true;
-    if (strstr(topicOri, OFFKey) != NULL)
-      ON = false;
-
-    digitalWrite(gpio, ON);
-    // we acknowledge the sending by publishing the value to an acknowledgement topic
-    char b = ON;
-    pub(subjectGTWONOFFtoMQTT, &b);
+    Log.notice(F("GPIO number: %d" CR), track);
+    speak((char)track);
   }
 }
 #  endif
@@ -85,6 +67,36 @@ void ActuatorButtonTrigger() {
   Log.trace(F("Actuator triggered %s by button" CR), level_string);
   digitalWrite(ACTUATOR_ONOFF_GPIO, level);
   pub(subjectGTWONOFFtoMQTT, level_string);
+}
+
+void speak(char SB_DATA)
+{
+  pinMode(2, OUTPUT);  
+  char S_DATA;
+  char B_DATA;
+  S_DATA =  SB_DATA;
+  digitalWrite(2, LOW);
+  delay(5);
+  B_DATA = S_DATA & 0x01;
+  for(int j=0;j<8;j++)
+  {
+     if((int)B_DATA == 1)
+     {
+         digitalWrite(2, HIGH);
+         delayMicroseconds(600);
+         digitalWrite(2, LOW);
+         delayMicroseconds(200);
+    } else {
+      digitalWrite(2, HIGH);
+      delayMicroseconds(200); //延时200us 
+      digitalWrite(2, LOW);
+      delayMicroseconds(600);
+    }
+    S_DATA = S_DATA >> 1;
+    B_DATA = S_DATA & 0x01;
+  }
+      delayMicroseconds(200);
+  digitalWrite(2, HIGH);
 }
 
 #endif

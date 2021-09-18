@@ -85,6 +85,7 @@ void MeasureGPIOInput() {
       }
       if (InputState == LOW) {
         GPIOdata.set("gpio", "LOW");
+        speak((char)45);
       }
       if (GPIOdata.size() > 0)
         pub(subjectGPIOInputtoMQTT, GPIOdata);

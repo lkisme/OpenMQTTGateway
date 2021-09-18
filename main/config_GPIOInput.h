@@ -36,7 +36,7 @@ extern void GPIOInputtoMQTT();
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef INPUT_GPIO
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO 13
+#    define INPUT_GPIO 0
 #  else
 #    define INPUT_GPIO 7
 #  endif
