@@ -702,6 +702,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       } else {
         Log.trace(F("Filtered mac device" CR));
       }
+      delay(1);
     }
   }
 };
