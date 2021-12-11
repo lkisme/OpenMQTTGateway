@@ -36,13 +36,13 @@ extern void GPIOInputtoMQTT();
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef INPUT_GPIO
 #  if defined(ESP8266) || defined(ESP32)
-#    define INPUT_GPIO 13
+#    define INPUT_GPIO 5
 #  else
 #    define INPUT_GPIO 7
 #  endif
 #endif
 
-#define INPUT_GPIO_ON_VALUE  "HIGH"
-#define INPUT_GPIO_OFF_VALUE "LOW"
+#define INPUT_GPIO_ON_VALUE  "LOW"
+#define INPUT_GPIO_OFF_VALUE "HIGH"
 
 #endif
