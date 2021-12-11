@@ -51,6 +51,7 @@ bool bleConnect = AttemptBLECOnnect;
 
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
+#define subjectBTtoADV     "/HCItoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
 #define MinimumRSSI        -100 //default minimum rssi value, all the devices below -90 will not be reported
 
@@ -95,6 +96,7 @@ bool bleConnect = AttemptBLECOnnect;
 #define CRLR               "0d0a"
 #define CRLR_Length        4
 #define BLE_CNCT_TIMEOUT   3000
+#define BLE_ADV            true
 
 #define ServicedataMinLength 27
 

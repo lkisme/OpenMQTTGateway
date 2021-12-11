@@ -639,6 +639,38 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     return spr;
   }
 
+  string scanResultToHCIPacket(BLEAdvertisedDevice* advertisedDevice, String mac_address) {
+    int hciHeaderLength = 14;
+    uint8_t payload_size = advertisedDevice->getPayloadLength();
+    int packet_length = 1 + (hciHeaderLength + payload_size + 1) * 2 ;
+
+    char packet[packet_length];
+    packet[packet_length] = '\0';
+    const char *addr = mac_address.c_str();
+    if (payload_size > 62 || 12 != mac_address.length() || !advertisedDevice->haveRSSI()) {
+      return "";
+    }
+    // HCI Packet Type: HCI Event (0x04), Event Code: LE Meta (0x3E)
+    // Sub Event: LE Advertising Report (0x02), Num Reports (0x01)
+    snprintf(packet, sizeof(packet), "043E%02X0201%02X%02X%c%c%c%c%c%c%c%c%c%c%c%c%02X%*s%02X",
+      11 + payload_size + 1, // Total Length
+      advertisedDevice->getAdvType(), // Event Type
+      advertisedDevice->getAddressType(), // Address Type
+      addr[10], addr[11], addr[8], addr[9], addr[6], addr[7], addr[4], addr[5], addr[2], addr[3], addr[0], addr[1], 
+      payload_size,
+      payload_size * 2, "", // Payload placeholder
+      (uint8_t) advertisedDevice->getRSSI()
+    );
+    char* payload = (char*)advertisedDevice->getPayload();
+    char *dest = &packet[14 * 2];
+    const char *hex = "0123456789ABCDEF";
+    for (int i = 0; i < payload_size; i++) {
+      *dest++ = hex[payload[i] >> 4];
+      *dest++ = hex[payload[i] & 0x0F];
+    }
+    return packet;
+  }
+
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
     if (!ProcessLock) {
       Log.trace(F("Creating BLE buffer" CR));
@@ -689,6 +721,15 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
         } else {
           PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
         }
+        #ifdef BLE_ADV
+          String mac_address = advertisedDevice->getAddress().toString().c_str(); //To avoid changing value of adress
+          mac_address.toUpperCase();
+          mac_address.replace(":", ""); 
+          String mactopic = subjectBTtoADV + String("/") + mac_address;
+          string packet = scanResultToHCIPacket(advertisedDevice, mac_address);
+          Log.trace(F("Created packet: %s" CR), (char*)packet.c_str());
+          pub((char*)mactopic.c_str(), (char*)packet.c_str());
+        #endif
       } else {
         Log.trace(F("Filtered mac device" CR));
       }
