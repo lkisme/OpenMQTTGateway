@@ -629,6 +629,15 @@ void TPMSDiscovery(const char* mac, const char* sensorModel) {}
 //core on which the BLE detection task will run
 static int taskCore = 0;
 
+int hcti(char ch) {
+  if(isdigit(ch))
+      return ch - 48;
+  if( ch < 'A' || (ch > 'F' && ch < 'a') || ch > 'z' )
+      return -1;
+  if(isalpha(ch))
+      return isupper(ch) ? ch - 55 : ch - 87;
+  return -1;
+}
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   std::string convertServiceData(std::string deviceServiceData) {
     int serviceDataLength = (int)deviceServiceData.length();
@@ -639,13 +648,22 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     return spr;
   }
 
-  string scanResultToHCIPacket(BLEAdvertisedDevice* advertisedDevice, String mac_address) {
+  void advertiseHciPacket(BLEAdvertisedDevice* advertisedDevice) {
     int hciHeaderLength = 14;
     uint8_t payload_size = advertisedDevice->getPayloadLength();
+    char* payload = (char*)advertisedDevice->getPayload();
     int packet_length = 1 + (hciHeaderLength + payload_size + 1) * 2 ;
+    int uuid16 = payload[3] * 16 + payload[2];
+    if (uuid16 == 0xFE95) {
+      //xiaomi device
+      advertisedDevice->getServiceData();
+    }
 
     char packet[packet_length];
     packet[packet_length] = '\0';
+    String mac_address = advertisedDevice->getAddress().toString().c_str(); 
+    mac_address.toUpperCase();
+    mac_address.replace(":", ""); 
     const char *addr = mac_address.c_str();
     if (payload_size > 62 || 12 != mac_address.length() || !advertisedDevice->haveRSSI()) {
       return "";
@@ -661,14 +679,17 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       payload_size * 2, "", // Payload placeholder
       (uint8_t) advertisedDevice->getRSSI()
     );
-    char* payload = (char*)advertisedDevice->getPayload();
     char *dest = &packet[14 * 2];
     const char *hex = "0123456789ABCDEF";
     for (int i = 0; i < payload_size; i++) {
       *dest++ = hex[payload[i] >> 4];
       *dest++ = hex[payload[i] & 0x0F];
     }
-    return packet;
+    String mactopic = subjectBTtoADV + String("/") + mac_address;
+
+    Log.trace(F("Created packet: %s" CR), packet);
+    pub((char*)mactopic.c_str(), packet);
+    
   }
 
   void onResult(BLEAdvertisedDevice* advertisedDevice) {
@@ -705,6 +726,10 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
           hass_presence(BLEdata); // this device has an rssi and we don't want only sensors so in consequence we can use it for home assistant room presence component
         }
         if (advertisedDevice->haveServiceData()) {
+          #ifdef BLE_ADV
+          bool advertised = false;
+          #endif
+          
           int serviceDataCount = advertisedDevice->getServiceDataCount();
           Log.trace(F("Get services data number: %d" CR), serviceDataCount);
           for (int j = 0; j < serviceDataCount; j++) {
@@ -715,21 +740,17 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
             Log.trace(F("Service data UUID: %s" CR), (char*)serviceDatauuid.c_str());
             BLEdata.set("servicedatauuid", (char*)serviceDatauuid.c_str());
             process_bledata(BLEdata); // this will force to resolve all the service data
+            #ifdef BLE_ADV
+            if (strcmp((char*)serviceDatauuid.c_str(), "FE95") == NULL && 4 == 4 & hcti(service_data.c_str()[8])) {
+              advertiseHciPacket(advertisedDevice);
+            }
+            #endif
           }
 
           PublishDeviceData(BLEdata, false);
         } else {
           PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
         }
-        #ifdef BLE_ADV
-          String mac_address = advertisedDevice->getAddress().toString().c_str(); //To avoid changing value of adress
-          mac_address.toUpperCase();
-          mac_address.replace(":", ""); 
-          String mactopic = subjectBTtoADV + String("/") + mac_address;
-          string packet = scanResultToHCIPacket(advertisedDevice, mac_address);
-          Log.trace(F("Created packet: %s" CR), (char*)packet.c_str());
-          pub((char*)mactopic.c_str(), (char*)packet.c_str());
-        #endif
       } else {
         Log.trace(F("Filtered mac device" CR));
       }
