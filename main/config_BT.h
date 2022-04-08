@@ -45,6 +45,7 @@ bool bleConnect = AttemptBLECOnnect;
 /*----------------------BT topics & parameters-------------------------*/
 #define subjectBTtoMQTT    "/BTtoMQTT"
 #define subjectMQTTtoBTset "/commands/MQTTtoBT/config"
+#define subjectBTtoHCI     "/BTtoHCI"
 #define MinimumRSSI        -100 //default minimum rssi value, all the devices below -90 will not be reported
 
 #ifndef Scan_duration
@@ -66,7 +67,7 @@ bool bleConnect = AttemptBLECOnnect;
 #  define BLEScanDuplicateCacheSize 200
 #endif
 #ifndef TimeBtwRead
-#  define TimeBtwRead 55555 //define default time between 2 scans
+#  define TimeBtwRead 3000 //define default time between 2 scans
 #endif
 #ifndef PublishOnlySensors
 #  define PublishOnlySensors false //false if we publish all BLE devices discovered or true only the identified sensors (like temperature sensors)

@@ -90,7 +90,74 @@ static bool oneWhite = false;
 
 int minRssi = abs(MinimumRSSI); //minimum rssi value
 
+
+void advertiseHciPacket(JsonObject& data) {
+  int hciHeaderLength = 14;
+  uint8_t payload_size = (uint8_t)data["payload_size"];
+
+  // uint8_t bytes;
+  // uint8_t data_loc = advertisedDevice->findServiceData(index, &bytes);
+  // payload_size = bytes;
+  const char* payload = data["payload"].as<const char*>();
+  if (payload_size < 1) {
+    Log.notice(F("advertiseHciPacket: Payload size illegal" CR));
+    return;
+  }
+  int packet_length = 1 + (hciHeaderLength + payload_size + 1) * 2 ;
+  int adv_type = payload[4];
+  int adv_uuid16 = payload[6] * 256 + payload[5];
+  Log.notice(F("advertiseHciPacket: adv_type: %d, adv_uuid16: %d" CR), adv_type , adv_uuid16);
+  if (0x16 == adv_type && adv_uuid16 == 0xFE95) {
+    //xiaomi device
+    if (payload_size < 10) {
+      Log.notice(F("advertiseHciPacket: Payload not available" CR));
+      return;
+    }
+    Log.notice(F("advertiseHciPacket: Detected device type: %d" CR), adv_uuid16);
+    int frctrl_object_include = (payload[7] >> 6) & 1;
+    if (frctrl_object_include == 0) {
+      Log.notice(F("advertiseHciPacket: No object included" CR));
+      return;
+    }
+  }
+  
+  char packet[packet_length];
+  packet[packet_length] = '\0';
+  String mac_address = data["id"].as<char*>(); 
+  mac_address.toUpperCase();
+  mac_address.replace(":", ""); 
+  const char *addr = mac_address.c_str();
+  if (payload_size > 62 || 12 != mac_address.length()) {
+    return ;
+  }
+  // HCI Packet Type: HCI Event (0x04), Event Code: LE Meta (0x3E)
+  // Sub Event: LE Advertising Report (0x02), Num Reports (0x01)
+  snprintf(packet, sizeof(packet), "043E%02X0201%02X%02X%c%c%c%c%c%c%c%c%c%c%c%c%02X%*s%02X",
+    11 + payload_size + 1, // Total Length
+    (uint8_t)data["advType"], // Event Type
+    (uint8_t)data["addType"], // Address Type
+    addr[10], addr[11], addr[8], addr[9], addr[6], addr[7], addr[4], addr[5], addr[2], addr[3], addr[0], addr[1], 
+    payload_size,
+    payload_size * 2, "", // Payload placeholder
+    (uint8_t) data["rssi"]
+  );
+  char *dest = &packet[14 * 2];
+  const char *hex = "0123456789ABCDEF";
+  for (int i = 0; i < payload_size; i++) {
+    *dest++ = hex[payload[i] >> 4];
+    *dest++ = hex[payload[i] & 0x0F];
+  }
+  String mactopic = subjectBTtoHCI + String("/") + mac_address;
+
+  Log.notice(F("Created packet: %s, for mac: %s" CR), packet, addr);
+  pub((char*)mactopic.c_str(), packet);
+}
+
 void pubBTMainCore(JsonObject& data, bool haPresenceEnabled = true) {
+  if (data.containsKey("payload")) {
+    advertiseHciPacket(data);
+    return;
+  }
   if (abs((int)data["rssi"] | 0) < minRssi) {
     String mac_address = data["id"].as<const char*>();
     mac_address.replace(":", "");
@@ -541,13 +608,23 @@ void INodeEMDiscovery(char* mac, char* sensorModel) {}
 //core on which the BLE detection task will run
 static int taskCore = 0;
 
+int hcti(char ch) {
+  if(isdigit(ch))
+      return ch - 48;
+  if( ch < 'A' || (ch > 'F' && ch < 'a') || ch > 'z' )
+      return -1;
+  if(isalpha(ch))
+      return isupper(ch) ? ch - 55 : ch - 87;
+  return -1;
+}
+
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
   std::string convertServiceData(std::string deviceServiceData) {
     int serviceDataLength = (int)deviceServiceData.length();
     char spr[2 * serviceDataLength + 1];
     for (int i = 0; i < serviceDataLength; i++) sprintf(spr + 2 * i, "%.2x", (unsigned char)deviceServiceData[i]);
     spr[2 * serviceDataLength] = 0;
-    Log.trace("Converted service data (%d) to %s" CR, serviceDataLength, spr);
+    Log.notice("Converted service data (%d) to %s" CR, serviceDataLength, spr);
     return spr;
   }
 
@@ -561,6 +638,19 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
     BLEdevice* device = getDeviceByMac(BLEdata["id"].as<const char*>());
 
     if ((!oneWhite || isWhite(device)) && !isBlack(device)) { //if not black listed mac we go AND if we have no white mac or this mac is  white we go out
+      
+    #ifdef BLE_HCI_ADV
+      Log.notice(F("BLE_ADV------->>>>>>>>>>>" CR));
+      if (advertisedDevice->haveRSSI()) {
+        BLEdata.set("rssi", (int)advertisedDevice->getRSSI());
+        BLEdata.set("advType", (uint8_t)advertisedDevice->getAdvType());
+        BLEdata.set("addType", (uint8_t)advertisedDevice->getAddressType());
+        BLEdata.set("payload_size", (uint8_t) advertisedDevice->getPayloadLength());
+        BLEdata.set("payload", advertisedDevice->getPayload());
+        pubBT(BLEdata);
+      } 
+        
+    #else
       if (advertisedDevice->haveName())
         BLEdata.set("name", (char*)advertisedDevice->getName().c_str());
       if (advertisedDevice->haveManufacturerData()) {
@@ -622,6 +712,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks {
       } else {
         PublishDeviceData(BLEdata); // PublishDeviceData has its own logic whether it needs to publish the json or not
       }
+    #endif
     } else {
       Log.trace(F("Filtered mac device" CR));
     }
