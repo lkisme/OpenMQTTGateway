@@ -894,6 +894,8 @@ void setup() {
   Log.notice(F("OpenMQTTGateway modules: %s" CR), jsonChar);
 #endif
   Log.notice(F("************** Setup OpenMQTTGateway end **************" CR));
+  // speak(40);
+  // WiFi.setSleepMode(WIFI_NONE_SLEEP);
 }
 
 #if defined(ESP8266) || defined(ESP32)

@@ -99,4 +99,5 @@ void MeasureGPIOInput() {
   // save the reading. Next time through the loop, it'll be the lastInputState:
   lastInputState = reading;
 }
+}
 #endif

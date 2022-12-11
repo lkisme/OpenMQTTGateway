@@ -82,23 +82,12 @@ void MQTTtoONOFF(char* topicOri, char* datacallback) {
   if ((cmpToMainTopic(topicOri, subjectMQTTtoONOFF))) {
     Log.trace(F("MQTTtoONOFF" CR));
     char* endptr = NULL;
-    long gpio = strtol(datacallback, &endptr, 10);
+    long track = strtol(datacallback, &endptr, 10);
     if (datacallback == endptr)
-      gpio = ACTUATOR_ONOFF_GPIO;
+      return;
 
-    Log.notice(F("GPIO number: %d" CR), gpio);
-    pinMode(gpio, OUTPUT);
-
-    bool ON = false;
-    if (strstr(topicOri, ONKey) != NULL)
-      ON = true;
-    if (strstr(topicOri, OFFKey) != NULL)
-      ON = false;
-
-    digitalWrite(gpio, ON);
-    // we acknowledge the sending by publishing the value to an acknowledgement topic
-    char b = ON;
-    pub(subjectGTWONOFFtoMQTT, &b);
+    Log.notice(F("GPIO number: %d" CR), track);
+    speak((char)track);
   }
 }
 #  endif
@@ -116,6 +105,36 @@ void ActuatorButtonTrigger() {
   JsonObject ONOFFdata = jsonBuffer.to<JsonObject>();
   ONOFFdata["cmd"] = (int)level;
   pub(subjectGTWONOFFtoMQTT, ONOFFdata);
+}
+
+void speak(char SB_DATA)
+{
+  pinMode(2, OUTPUT);  
+  char S_DATA;
+  char B_DATA;
+  S_DATA =  SB_DATA;
+  digitalWrite(2, LOW);
+  delay(5);
+  B_DATA = S_DATA & 0x01;
+  for(int j=0;j<8;j++)
+  {
+     if((int)B_DATA == 1)
+     {
+         digitalWrite(2, HIGH);
+         delayMicroseconds(600);
+         digitalWrite(2, LOW);
+         delayMicroseconds(200);
+    } else {
+      digitalWrite(2, HIGH);
+      delayMicroseconds(200); //延时200us 
+      digitalWrite(2, LOW);
+      delayMicroseconds(600);
+    }
+    S_DATA = S_DATA >> 1;
+    B_DATA = S_DATA & 0x01;
+  }
+      delayMicroseconds(200);
+  digitalWrite(2, HIGH);
 }
 
 #endif

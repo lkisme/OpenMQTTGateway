@@ -32,11 +32,11 @@
 // the channel names and corresponding output pins
 #ifndef PWM_CHANNEL_NAMES
 #  define PWM_CHANNEL_NAMES \
-    { "r", "g", "b", "w0", "w1" }
+    { "w" }
 #endif
 #ifndef PWM_CHANNEL_PINS
 #  define PWM_CHANNEL_PINS \
-    { 25, 33, 32, 23, 22 }
+    { 15 }
 #endif
 
 // Gamma defines a power curve that is applied to convert the input values

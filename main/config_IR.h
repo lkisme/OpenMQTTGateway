@@ -192,7 +192,7 @@ extern void MQTTtoIR(char* topicOri, JsonObject& RFdata);
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef IR_RECEIVER_GPIO
 #  ifdef ESP8266
-#    define IR_RECEIVER_GPIO 2 //D4 /replace by 4 with sonoff rf bridge
+#    define IR_RECEIVER_GPIO 0 //D4 /replace by 4 with sonoff rf bridge
 #  elif ESP32
 #    define IR_RECEIVER_GPIO 26
 #  elif __AVR_ATmega2560__
