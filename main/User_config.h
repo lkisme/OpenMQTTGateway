@@ -308,7 +308,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZgatewaySRFB   "SRFB"     //                          Sonoff RF Bridge
 //#define Zgateway2G     "2G"       //ESP8266, Arduino, ESP32
 //#define ZgatewayRFM69  "RFM69"    //ESP8266, Arduino, ESP32
-//#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
+#define ZactuatorONOFF "ONOFF"    //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZsensorINA226  "INA226"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR04  "HCSR04"   //ESP8266, Arduino, ESP32
 //#define ZsensorHCSR501 "HCSR501"  //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
@@ -329,10 +329,10 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //#define ZboardM5STACK  "M5STACK"
 //#define ZboardM5TOUGH  "M5TOUGH"
 //#define ZradioCC1101   "CC1101"   //ESP8266, ESP32
-#define ZactuatorPWM   "PWM"      //ESP8266, ESP32
+// #define ZactuatorPWM   "PWM"      //ESP8266, ESP32
 //#define ZsensorSHTC3 "SHTC3" //ESP8266, Arduino, ESP32,  Sonoff RF Bridge
 //#define ZactuatorSomfy "Somfy"    //ESP8266, Arduino, ESP32
-//#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
+#define ZgatewayRS232   "RS232"  //ESP8266, Arduino, ESP32
 
 /*-------------DEFINE YOUR MQTT ADVANCED PARAMETERS BELOW----------------*/
 #ifndef version_Topic

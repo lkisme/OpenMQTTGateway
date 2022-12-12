@@ -30,6 +30,7 @@
 #ifdef ZgatewayRS232
 
 #  include <SoftwareSerial.h>
+#include "su03t/jx_uart_send.h"
 
 SoftwareSerial RS232Serial(RS232_RX_GPIO, RS232_TX_GPIO); // RX, TX
 
@@ -68,20 +69,51 @@ void RS232toMQTT() {
     pub(subjectRS232toMQTT, output);
   }
 }
+void serialPrint(unsigned char* buff) {
+  int len = 9;
+  byte bytes[len];
+  int i = 0;
+  unsigned char c;
+  Log.trace(F("MQTTtoRS232 json" CR));
+  for (i = 0; i < len; i++) {
+    bytes[i] = (byte)buff[i];
+    Log.trace(F("%2x" CR),buff[i]);
+  }
+  RS232Serial.write(bytes, len);
+}
+
+bool compare(const char* src, const char* dest) {
+  return 0 == strcmp(src, dest);
+}
 
 void MQTTtoRS232(char* topicOri, JsonObject& RS232data) {
   Log.trace(F("json" CR));
   if (cmpToMainTopic(topicOri, subjectMQTTtoRS232)) {
-    Log.trace(F("MQTTtoRS232 json" CR));
-    const char* data = RS232data["value"];
-    const char* prefix = RS232data["prefix"] | RS232Pre;
-    const char* postfix = RS232data["postfix"] | RS232Post;
-    Log.trace(F("Value set: %s" CR), data);
-    Log.trace(F("Prefix set: %s" CR), prefix);
-    Log.trace(F("Postfix set: %s" CR), postfix);
-    RS232Serial.print(prefix);
-    RS232Serial.print(data);
-    RS232Serial.print(postfix);
+    if (RS232data.containsKey("cmd") && RS232data.containsKey("para")) {
+      Serial.println("Json content legal !");
+      const char* command = RS232data["cmd"];
+      int parameter = RS232data["para"];
+      Log.trace(F("command: %s" CR), command);
+      Log.trace(F("parameter: %s" CR), parameter);
+      unsigned char buff[9] = {0};
+      if (compare(command, "alert")) {
+        _uart_alert(parameter,buff);//由于第一次设置变量，不会触发播放语音
+        serialPrint(buff);
+        _uart_read_cmd(0, buff);//所以进行第二次设置变量，且设置为不播放语音的变量
+        delay(50);
+      }else if (compare(command, "status")) {
+        _uart_report_status(parameter,buff);
+        serialPrint(buff);
+        _uart_read_cmd(-1, buff);
+        delay(50);
+      }else if (compare(command, "cmd")) {
+        _uart_read_cmd(parameter, buff);
+        serialPrint(buff);
+        _uart_read_cmd(0, buff);
+        delay(50);
+      }
+      serialPrint(buff);
+    }
   }
 }
 #endif

@@ -40,14 +40,14 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 //Setup for RS232
 #define MAX_INPUT   50 // how much serial data we expect
 #define RS232Baud   9600 // The serial connection Baud
-#define RS232Pre    "00" // The prefix for the RS232 message
-#define RS232Post   "\r" // The postfix for the RS232 message
+#define RS232Pre    "" // The prefix for the RS232 message
+#define RS232Post   "" // The postfix for the RS232 message
 #define RS232InPost '\r' // Hacky way to get last character of postfix for incoming
 
 /*-------------------PIN DEFINITIONS----------------------*/
 #ifndef RS232_RX_GPIO
 #  ifdef ESP8266
-#    define RS232_RX_GPIO 4 //D2
+#    define RS232_RX_GPIO 2 //D2
 #  elif ESP32
 #    define RS232_RX_GPIO 26
 #  elif __AVR_ATmega2560__
@@ -59,7 +59,7 @@ extern void MQTTtoRS232(char* topicOri, JsonObject& RS232data);
 
 #ifndef RS232_TX_GPIO
 #  ifdef ESP8266
-#    define RS232_TX_GPIO 2 //D4
+#    define RS232_TX_GPIO 14 //D4
 #  elif ESP32
 #    define RS232_TX_GPIO 14
 #  elif __AVR_ATmega2560__
