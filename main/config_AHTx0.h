@@ -41,7 +41,7 @@
 extern void setupAHTx0();
 extern void AHTx0toMQTT();
 
-#define AHTx0_always            true // if false when the current value of the parameter is the same as previous one don't send it by MQTT
+#define AHTx0_always            false // if false when the current value of the parameter is the same as previous one don't send it by MQTT
 #define TimeBetweenReadingAHTx0 30000
 
 /*----------------------------USER PARAMETERS-----------------------------*/
@@ -54,5 +54,8 @@ extern void AHTx0toMQTT();
 #    define AHT_I2C_SCL 0
 #  endif
 #endif
+
+#define TEMPERATURE_DIGITS 2
+#define HUMIDITY_DIGITS 2
 
 #endif
