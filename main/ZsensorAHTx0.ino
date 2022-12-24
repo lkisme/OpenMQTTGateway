@@ -66,6 +66,13 @@ void setupZsensorAHTx0() {
 #  endif
 }
 
+inline float convertf(float val, uint8_t digits) {
+  if (digits >= 5 || digits < 0) 
+    return val;
+  float divisor = powf(10, digits);
+  return (int (val * divisor)) / divisor;
+}
+
 void MeasureAHTTempHum() {
   if (millis() > (timeAHTx0 + TimeBetweenReadingAHTx0)) {
     Log.trace(F("Read AHTx0 Sensor" CR));
@@ -85,6 +92,12 @@ void MeasureAHTTempHum() {
     if (isnan(ahtTempC.temperature) || isnan(ahtHum.relative_humidity)) {
       Log.error(F("Failed to read from sensor AHTx0!" CR));
     } else {
+#if defined(TEMPERATURE_DIGITS)
+      ahtTempC.temperature = convertf(ahtTempC.temperature, TEMPERATURE_DIGITS);
+#endif
+#if defined(HUMIDITY_DIGITS)
+      ahtHum.relative_humidity = convertf(ahtHum.relative_humidity, HUMIDITY_DIGITS);
+#endif
       Log.notice(F("Creating AHTx0 buffer" CR));
       StaticJsonDocument<JSON_MSG_BUFFER> jsonBuffer;
       JsonObject AHTx0data = jsonBuffer.to<JsonObject>();
@@ -93,13 +106,14 @@ void MeasureAHTTempHum() {
         float ahtTempF = convertTemp_CtoF(ahtTempC.temperature);
         AHTx0data["tempc"] = (float)ahtTempC.temperature;
         AHTx0data["tempf"] = (float)ahtTempF;
+        
       } else {
         Log.notice(F("Same Temp. Don't send it" CR));
       }
 
       // Generate Humidity in percent
       if (ahtHum.relative_humidity != persisted_aht_hum || AHTx0_always) {
-        AHTx0data["hum"] = (float)ahtHum.relative_humidity;
+        AHTx0data["hum"] = ahtHum.relative_humidity;
       } else {
         Log.notice(F("Same Humidity. Don't send it" CR));
       }

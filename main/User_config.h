@@ -297,7 +297,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 //Addons and module management, uncomment the Z line corresponding to the module you want to use
 
 #define ZgatewayRF     "RF"       //ESP8266, Arduino, ESP32
-#define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
+// #define ZgatewayIR     "IR"       //ESP8266, Arduino,         Sonoff RF Bridge
 #define ZsensorAHTx0    "AHTx0"
 //#define ZgatewayLORA   "LORA"       //ESP8266, Arduino, ESP32
 //#define ZgatewayPilight "Pilight" //ESP8266, Arduino, ESP32
