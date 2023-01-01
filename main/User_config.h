@@ -409,7 +409,7 @@ int lowpowermode = DEFAULT_LOW_POWER_MODE;
 #  endif
 #  ifndef LED_ERROR
 #    ifdef ESP8266
-#      define LED_ERROR 42
+#      define LED_ERROR 15
 #    elif ESP32
 #      define LED_ERROR 42
 #    elif __AVR_ATmega2560__ //arduino mega

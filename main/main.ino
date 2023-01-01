@@ -54,6 +54,9 @@ unsigned long timer_sys_measures = 0;
 #include <PubSubClient.h>
 
 #include <string>
+//14 minutes
+#define DISCONNECT_THRESHOLD 840000
+unsigned long wifi_disconnect_time = 0;
 
 StaticJsonDocument<JSON_MSG_BUFFER> modulesBuffer;
 JsonArray modules = modulesBuffer.to<JsonArray>();
@@ -1578,8 +1581,14 @@ void loop() {
       connected = false;
       connectMQTT();
     }
+    if (wifi_disconnect_time > 0) {
+      wifi_disconnect_time = 0;
+    }
   } else { // disconnected from network
     connected = false;
+    if (wifi_disconnect_time == 0) {
+      wifi_disconnect_time = millis();
+    }
     Log.warning(F("Network disconnected:" CR));
     ErrorIndicatorON();
     delay(2000); // add a delay to avoid ESP32 crash and reset
@@ -1590,6 +1599,9 @@ void loop() {
     WiFi.reconnect();
 #  endif
     Log.warning(F("wifi" CR));
+    if (millis() - wifi_disconnect_time > DISCONNECT_THRESHOLD) {
+      ESP.reset();
+    }
 #else
     Log.warning(F("ethernet" CR));
 #endif
